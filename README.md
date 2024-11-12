@@ -4,7 +4,7 @@
 ![Диаграмма прецедентов](assets/Диаграмма%20Прецедентов.png)
 
 ## Диаграмма классов ORM
-```memaid
+```mermaid
 classDiagram
     %% Класс User
     class User {
@@ -139,7 +139,7 @@ sequenceDiagram
     Browser->>User: Отображает результаты
 ```
 ### Диаграмма последовательности регистрации
-```memaid
+```mermaid
 sequenceDiagram
     participant User
     participant Browser
