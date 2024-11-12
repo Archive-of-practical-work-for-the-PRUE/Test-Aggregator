@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from .models import Quiz, Choice, Attempt, Answer
+from .forms import QuizForm
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
@@ -31,7 +32,8 @@ def take_quiz(request, pk):
             if question.question_type == 'single':
                 # Для одиночного выбора ожидаем одно значение
                 selected_choice_id = answer_data[0] if answer_data else None
-                selected_choice = Choice.objects.get(id=selected_choice_id) if selected_choice_id else None
+                selected_choice = Choice.objects.get(
+                    id=selected_choice_id) if selected_choice_id else None
 
                 # Создаем ответ
                 answer = Answer.objects.create(
@@ -45,7 +47,8 @@ def take_quiz(request, pk):
             elif question.question_type == 'multiple':
                 # Для множественного выбора ожидаем список значений
                 selected_choice_ids = answer_data
-                selected_choices = Choice.objects.filter(id__in=selected_choice_ids)
+                selected_choices = Choice.objects.filter(
+                    id__in=selected_choice_ids)
 
                 # Создаем ответ
                 answer = Answer.objects.create(
@@ -93,6 +96,21 @@ def take_quiz(request, pk):
     else:
         # Отображение формы с вопросами
         return render(request, 'quiz/take_quiz.html', {'quiz': quiz})
+
+
+def create_quiz(request):
+    if request.method == 'POST':
+        form = QuizForm(request.POST)
+        if form.is_valid():
+            quiz = form.save(commit=False)
+            quiz.author = request.user
+            quiz.save()
+            print("PIZDEC")
+            return HttpResponseRedirect(reverse('create_quiz'))
+    else:
+        form = QuizForm()
+
+    return render(request, 'quiz/create_quiz.html', {"form": form})
 
 
 @login_required

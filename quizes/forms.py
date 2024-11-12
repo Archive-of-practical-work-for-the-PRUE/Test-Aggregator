@@ -6,6 +6,9 @@ class QuizForm(forms.ModelForm):
     class Meta:
         model = Quiz
         fields = ['title', 'description', 'category', 'is_published']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+        }
 
 
 class QuestionForm(forms.ModelForm):
