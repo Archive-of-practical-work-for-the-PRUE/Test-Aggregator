@@ -3,7 +3,17 @@
 ## Install
 
 ```bash
+# 1. Create virtual environment
+python -m venv env
+
+# 2. Install packages
 pip install -r requirements.txt
+```
+
+## Run project
+
+```bash
+python manage.py runserver
 ```
 
 ## Диграмма прецедентов
