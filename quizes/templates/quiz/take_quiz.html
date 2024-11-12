@@ -1,0 +1,26 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+  <h1>{{ quiz.title }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% for question in quiz.questions.all %}
+      <h2>{{ question.text }}</h2>
+      {% if question.question_type == 'single' %}
+        {% for choice in question.choices.all %}
+          <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}">
+          {{ choice.text }}<br>
+        {% endfor %}
+      {% elif question.question_type == 'multiple' %}
+        {% for choice in question.choices.all %}
+          <input type="checkbox" name="question_{{ question.id }}" value="{{ choice.id }}">
+          {{ choice.text }}<br>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+
+    <button type="submit">Отправить</button>
+  </form>
+{% endblock %}

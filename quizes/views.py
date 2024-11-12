@@ -9,7 +9,7 @@ from django.utils import timezone
 
 def home(request):
     quizzes = Quiz.objects.filter(is_published=True)
-    return render(request, 'main/home.html', {'quizzes': quizzes})
+    return render(request, 'quiz/home.html', {'quizzes': quizzes})
 
 
 @login_required
@@ -92,15 +92,15 @@ def take_quiz(request, pk):
         return HttpResponseRedirect(reverse('quiz_result', args=[attempt.id]))
     else:
         # Отображение формы с вопросами
-        return render(request, 'main/take_quiz.html', {'quiz': quiz})
+        return render(request, 'quiz/take_quiz.html', {'quiz': quiz})
 
 
 @login_required
 def quiz_result(request, attempt_id):
     attempt = get_object_or_404(Attempt, pk=attempt_id, user=request.user)
-    return render(request, 'main/quiz_result.html', {'attempt': attempt})
+    return render(request, 'quiz/quiz_result.html', {'attempt': attempt})
 
 
 def quiz_detail(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk, is_published=True)
-    return render(request, 'main/quiz_detail.html', {'quiz': quiz})
+    return render(request, 'quiz/quiz_detail.html', {'quiz': quiz})

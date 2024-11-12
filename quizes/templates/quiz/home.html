@@ -1,0 +1,27 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+  <div class="container">
+
+    <div class="row">
+      <div class="col-md-12">
+        <h1>Доступные тесты</h1>
+      </div>
+    </div>
+
+    <div class="row">
+      {% for quiz in quizzes %}
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h5 class="card-title">{{ quiz.title }}</h5>
+              <p class="card-text">Описание теста.</p>
+              <a href="{% url 'take_quiz' quiz.pk %}" class="btn btn-primary">Пройти тест</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+{% endblock %}
