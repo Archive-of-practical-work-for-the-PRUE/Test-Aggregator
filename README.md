@@ -3,10 +3,17 @@
 ## Install
 
 ```bash
-# 1. Create virtual environment
+# 1) Create virtual environment
 python -m venv env
 
-# 2. Install packages
+# 1.5) Activate virtual environment
+# linux
+source env/bin/activate
+
+# windwos
+./env/bin/Activate.ps1
+
+# 2) Install packages
 pip install -r requirements.txt
 ```
 
