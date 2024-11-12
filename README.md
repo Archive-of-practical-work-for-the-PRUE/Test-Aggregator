@@ -1,5 +1,11 @@
 # Test-Aggregator
 
+## Install
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Диграмма прецедентов
 ![Диаграмма прецедентов](assets/Диаграмма%20Прецедентов.png)
 
