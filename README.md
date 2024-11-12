@@ -11,7 +11,7 @@ python -m venv env
 source env/bin/activate
 
 # windwos
-./env/bin/Activate.ps1
+./env/Scripts/activate
 
 # 2) Install packages
 pip install -r requirements.txt
