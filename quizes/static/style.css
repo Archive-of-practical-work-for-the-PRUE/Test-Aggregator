@@ -19,3 +19,17 @@ body {
   background-color: #007bff;
   border-color: #007bff;
 }
+
+.card {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+}
+
+.form-label {
+  font-weight: bold;
+}
+
+.fixed-height {
+  height: 150px;
+  resize: none;
+}

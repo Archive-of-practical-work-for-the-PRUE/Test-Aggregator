@@ -1,25 +1,39 @@
 {% extends 'quiz/base.html' %}
 
 {% block content %}
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h1>Доступные тесты</h1>
-          <a href="{% url 'create_quiz' %}" class="btn btn-success">Создать тест</a>
-      </div>
-    </div>
-    <div class="row">
-      {% for quiz in quizzes %}
-        <div class="col-md-4">
-          <div class="card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">{{ quiz.title }}</h5>
-              <p class="card-text">{{ quiz.description }}</p> 
-              <a href="{% url 'take_quiz' quiz.pk %}" class="btn btn-primary">Пройти тест</a>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-md-12 text-center mb-4">
+      <h1 class="display-4">Добро пожаловать в мир квизов!</h1>
+      <p class="lead">Проверьте свои знания, развлекитесь и узнайте что-то новое.</p>
     </div>
   </div>
+
+  <div class="row">
+    <div class="col-md-12 mb-4">
+      <a href="{% url 'create_quiz' %}" class="btn btn-lg btn-success">Создать свой тест</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <h2 class="mb-4">Доступные тесты</h2>
+      <div class="row">
+        {% for quiz in quizzes %}
+          <div class="col-md-4 mb-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">{{ quiz.title }}</h5>
+                <p class="card-text">{{ quiz.description }}</p>
+              </div>
+              <div class="card-footer bg-light"> 
+                <a href="{% url 'take_quiz' quiz.pk %}" class="btn btn-primary w-100">Пройти тест</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

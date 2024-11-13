@@ -105,7 +105,6 @@ def create_quiz(request):
             quiz = form.save(commit=False)
             quiz.author = request.user
             quiz.save()
-            print("PIZDEC")
             return HttpResponseRedirect(reverse('create_quiz'))
     else:
         form = QuizForm()
