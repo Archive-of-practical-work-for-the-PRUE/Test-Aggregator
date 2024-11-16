@@ -1,7 +1,8 @@
-from django.shortcuts import render
-from .models import Quiz, Choice, Attempt, Answer
-from .forms import QuizForm
+from .models import Quiz, Choice, Attempt, Answer, Profile
+from .forms import QuizForm, UserRegisterForm, ProfileUpdateForm
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -110,6 +111,32 @@ def create_quiz(request):
         form = QuizForm()
 
     return render(request, 'quiz/create_quiz.html', {"form": form})
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Автоматически логиним пользователя после регистрации
+            messages.success(request, 'Вы успешно зарегистрировались!')
+            return redirect('home')  # Перенаправляем на главную страницу или куда нужно
+    else:
+        form = UserRegisterForm()
+    return render(request, 'quiz/register.html', {'form': form})
+
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        if p_form.is_valid():
+            p_form.save()
+            messages.success(request, 'Ваш профиль был обновлен!')
+            return redirect('profile')
+    else:
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+    return render(request, 'quiz/profile.html', {'p_form': p_form})
 
 
 @login_required
