@@ -1,9 +1,52 @@
 {% extends 'quiz/base.html' %}
 
+{% block title %}Результаты теста: {{ attempt.quiz.title }}{% endblock %}
+
 {% block content %}
-  <h1>Результаты теста</h1>
+<h1>Результаты теста: {{ attempt.quiz.title }}</h1>
+<p>Ваш результат: <strong>{{ attempt.score }} из {{ attempt.max_score }}</strong></p>
+<p>Дата прохождения: {{ attempt.finished_at|date:"d.m.Y H:i" }}</p>
 
-  <p>Вы ответили правильно на {{ correct_answers }} из {{ attempt.quiz.questions.count() }} вопросов.</p>
+<h2>Детали ответов:</h2>
+{% for item in answers %}
+    {% with answer=item.answer is_correct=item.is_correct correct_choices=item.correct_choices user_choices=item.user_choices %}
+    <div class="question">
+        <p><strong>{{ forloop.counter }}. {{ answer.question.text }}</strong></p>
+        {% if answer.question.question_type == 'single' or answer.question.question_type == 'multiple' %}
+            <p>Ваш ответ:</p>
+            <ul>
+                {% for choice in user_choices %}
+                    <li>{{ choice.text }}</li>
+                {% empty %}
+                    <li>Вы не ответили на этот вопрос.</li>
+                {% endfor %}
+            </ul>
+            <p>Правильный ответ:</p>
+            <ul>
+                {% for choice in correct_choices %}
+                    <li>{{ choice.text }}</li>
+                {% endfor %}
+            </ul>
+            {% if is_correct %}
+                <p><strong>Верно!</strong></p>
+            {% else %}
+                <p><strong>Неверно.</strong></p>
+            {% endif %}
+        {% elif answer.question.question_type == 'text' %}
+            <p>Ваш ответ: {{ answer.text_answer }}</p>
+            {% if question.correct_answer %}
+                <p>Правильный ответ: {{ question.correct_answer }}</p>
+            {% endif %}
+            {% if is_correct %}
+                <p><strong>Верно!</strong></p>
+            {% else %}
+                <p><strong>Неверно.</strong></p>
+            {% endif %}
+        {% endif %}
+    </div>
+    <hr>
+    {% endwith %}
+{% endfor %}
 
-  <p>Ваш результат: {{ percentage_correct }}%</p>
+<a href="{% url 'home' %}" class="btn btn-primary">Вернуться к списку тестов</a>
 {% endblock %}

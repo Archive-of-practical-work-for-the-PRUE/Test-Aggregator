@@ -1,26 +1,42 @@
 {% extends 'quiz/base.html' %}
 
+{% block title %}Прохождение теста: {{ quiz.title }}{% endblock %}
+
 {% block content %}
-  <h1>{{ quiz.title }}</h1>
+<h1>{{ quiz.title }}</h1>
+<p>{{ quiz.description }}</p>
 
-  <form method="post">
+<form method="post">
     {% csrf_token %}
-
-    {% for question in quiz.questions.all %}
-      <h2>{{ question.text }}</h2>
-      {% if question.question_type == 'single' %}
-        {% for choice in question.choices.all %}
-          <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}">
-          {{ choice.text }}<br>
-        {% endfor %}
-      {% elif question.question_type == 'multiple' %}
-        {% for choice in question.choices.all %}
-          <input type="checkbox" name="question_{{ question.id }}" value="{{ choice.id }}">
-          {{ choice.text }}<br>
-        {% endfor %}
-      {% endif %}
+    {% for question in questions %}
+        <div class="question">
+            <p><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>
+            {% if question.question_type == 'single' %}
+                {% for choice in question.choices.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}">
+                        <label class="form-check-label" for="choice_{{ choice.id }}">
+                            {{ choice.text }}
+                        </label>
+                    </div>
+                {% endfor %}
+            {% elif question.question_type == 'multiple' %}
+                {% for choice in question.choices.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}">
+                        <label class="form-check-label" for="choice_{{ choice.id }}">
+                            {{ choice.text }}
+                        </label>
+                    </div>
+                {% endfor %}
+            {% elif question.question_type == 'text' %}
+                <div class="form-group">
+                    <textarea class="form-control" name="question_{{ question.id }}" rows="3"></textarea>
+                </div>
+            {% endif %}
+        </div>
+        <hr>
     {% endfor %}
-
-    <button type="submit">Отправить</button>
-  </form>
+    <button type="submit" class="btn btn-success">Отправить ответы</button>
+</form>
 {% endblock %}

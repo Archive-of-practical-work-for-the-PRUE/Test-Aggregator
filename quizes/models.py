@@ -43,6 +43,7 @@ class Question(models.Model):
     text = models.TextField()
     question_type = models.CharField(max_length=10, choices=QUESTION_TYPES)
     order = models.PositiveIntegerField()
+    correct_answer = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f'Вопрос {self.order}: {self.text[:50]}'
@@ -62,11 +63,11 @@ class Attempt(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     started_at = models.DateTimeField(auto_now_add=True)
     finished_at = models.DateTimeField(null=True, blank=True)
-    score = models.FloatField(default=0)
-    max_score = models.FloatField(default=0)
+    score = models.IntegerField(default=0)
+    max_score = models.IntegerField(default=0)
 
     def __str__(self):
-        return f'Попытка {self.user.username} в "{self.quiz.title}"'
+        return f'Попытка {self.user.username} - {self.quiz.title}'
 
 
 class Answer(models.Model):
@@ -76,7 +77,7 @@ class Answer(models.Model):
     text_answer = models.TextField(blank=True)
 
     def __str__(self):
-        return f'Ответ на вопрос "{self.question.text[:50]}"'
+        return f'Ответ на вопрос "{self.question.text[:50]}" от {self.attempt.user.username}'
 
 
 class Comment(models.Model):
