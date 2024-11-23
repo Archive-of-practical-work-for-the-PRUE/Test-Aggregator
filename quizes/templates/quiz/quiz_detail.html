@@ -1,0 +1,17 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<h1>{{ quiz.title }}</h1>
+<p>{{ quiz.description }}</p>
+<p>Категория: {{ quiz.category.name }}</p>
+<p>Автор: {{ quiz.author.username }}</p>
+
+{% if user.is_authenticated %}
+    <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary">Начать тест</a>
+{% else %}
+    <p>Пожалуйста, <a href="{% url 'login' %}">войдите</a> в систему, чтобы пройти этот тест.</p>
+{% endif %}
+
+{% endblock %}

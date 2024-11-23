@@ -1,0 +1,44 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Список тестов{% endblock %}
+
+{% block content %}
+<h1>Список доступных тестов</h1>
+
+<h2>Нерешённые тесты</h2>
+<ul class="list-group">
+    {% for quiz in quizzes %}
+        {% if not quiz.is_solved %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'quiz_detail' quiz.id %}">{{ quiz.title }}</a>
+                    <p>{{ quiz.description }}</p>
+                    <p>Автор: {{ quiz.author.username }}</p>
+                </div>
+                <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary">Пройти тест</a>
+            </li>
+        {% endif %}
+    {% empty %}
+        <li class="list-group-item">Нет доступных тестов.</li>
+    {% endfor %}
+</ul>
+
+<h2 class="mt-4">Решённые тесты</h2>
+<ul class="list-group">
+    {% for quiz in quizzes %}
+        {% if quiz.is_solved %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'quiz_detail' quiz.id %}">{{ quiz.title }}</a>
+                    <p>{{ quiz.description }}</p>
+                    <p>Автор: {{ quiz.author.username }}</p>
+                    <a href="{% url 'attempt_list' quiz.id %}" class="btn btn-secondary">Мои попытки</a>
+                </div>
+                <span class="badge badge-success">Решён</span>
+            </li>
+        {% endif %}
+    {% empty %}
+        <li class="list-group-item">Нет доступных тестов.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
