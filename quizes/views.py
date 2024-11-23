@@ -1,12 +1,13 @@
-from .models import Quiz, Choice, Attempt, Answer, Profile
-from .forms import QuizForm, UserRegisterForm, ProfileUpdateForm
+from .models import Quiz, Choice, Attempt, Answer, Profile, Question
+from .forms import QuizForm, UserRegisterForm, ProfileUpdateForm, QuestionForm, ChoiceForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib import messages
 
 
 def home(request):
@@ -99,6 +100,7 @@ def take_quiz(request, pk):
         return render(request, 'quiz/take_quiz.html', {'quiz': quiz})
 
 
+@login_required
 def create_quiz(request):
     if request.method == 'POST':
         form = QuizForm(request.POST)
@@ -106,11 +108,59 @@ def create_quiz(request):
             quiz = form.save(commit=False)
             quiz.author = request.user
             quiz.save()
-            return HttpResponseRedirect(reverse('create_quiz'))
+            # Redirect to question creation
+            return redirect('create_questions', quiz_id=quiz.pk)
     else:
         form = QuizForm()
+    return render(request, 'quiz/create_quiz.html', {'form': form})
 
-    return render(request, 'quiz/create_quiz.html', {"form": form})
+
+def create_questions(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    if request.method == 'POST':
+        # получаем количество вопросов из скрытого поля формы
+        num_questions = int(request.POST.get('num_questions', 0))
+
+        for i in range(num_questions):
+            question_data = {
+                'text': request.POST.get(f'question_{i}-text'),
+                'question_type': request.POST.get(f'question_{i}-question_type'),
+                'quiz': quiz,
+                'order': i+1  # Устанавливаем порядок вопроса
+            }
+            if not all(question_data.values()):  # проверка на неполные вопросы
+                return HttpResponseBadRequest("Не все поля заполнены!")
+
+            question_form = QuestionForm(question_data)
+            if question_form.is_valid():
+                question = question_form.save()
+
+                num_choices = int(request.POST.get(f'num_choices_{i}', 0))
+                for j in range(num_choices):
+                    choice_data = {
+                        'question': question,
+                        'text': request.POST.get(f'choice_{i}_{j}-text'),
+                        'is_correct': request.POST.get(f'choice_{i}_{j}-is_correct') == 'on',
+                    }
+                    # проверяем наличие текста варианта ответа
+                    if not choice_data['text']:
+                        continue
+
+                    choice_form = ChoiceForm(choice_data)
+                    if choice_form.is_valid():
+                        choice_form.save()
+                    else:
+                        # Обработка ошибки при невалидности данных о варианте ответа
+                        return HttpResponseBadRequest(choice_form.errors)
+            else:
+                # Обработка ошибок при невалидности данных о вопросе
+                return HttpResponseBadRequest(question_form.errors)
+
+        # Перенаправление на страницу с квизом
+        return redirect('home')
+
+    else:
+        return render(request, 'quiz/create_questions.html', {'quiz': quiz, 'question_form': QuestionForm()})
 
 
 def register(request):
@@ -118,9 +168,11 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # Автоматически логиним пользователя после регистрации
+            # Автоматически логиним пользователя после регистрации
+            login(request, user)
             messages.success(request, 'Вы успешно зарегистрировались!')
-            return redirect('home')  # Перенаправляем на главную страницу или куда нужно
+            # Перенаправляем на главную страницу или куда нужно
+            return redirect('home')
     else:
         form = UserRegisterForm()
     return render(request, 'quiz/register.html', {'form': form})
@@ -129,7 +181,8 @@ def register(request):
 @login_required
 def profile(request):
     if request.method == 'POST':
-        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        p_form = ProfileUpdateForm(
+            request.POST, request.FILES, instance=request.user.profile)
         if p_form.is_valid():
             p_form.save()
             messages.success(request, 'Ваш профиль был обновлен!')

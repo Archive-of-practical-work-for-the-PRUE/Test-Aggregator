@@ -1,0 +1,105 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Создание вопросов для "{{ quiz.title }}"</h1>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="num_questions" id="num_questions" value="0">
+    <div id="question-container"></div>
+    <button type="submit" class="btn btn-success mt-3">Сохранить вопросы</button>
+</form>
+</div>
+
+
+<script>
+ const questionContainer = document.getElementById('question-container');
+let questionCount = 0;
+
+function addQuestion() {
+  questionCount++;
+  const newQuestionHTML = `
+    <div class="question-block mb-4">
+      <div class="mb-3">
+        <label for="id_text_${questionCount}" class="form-label">Текст вопроса:</label>
+        <textarea id="id_text_${questionCount}" name="question_${questionCount}-text" class="form-control" rows="3" required></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="id_question_type_${questionCount}" class="form-label">Тип вопроса:</label>
+        <select id="id_question_type_${questionCount}" name="question_${questionCount}-question_type" class="form-select" required>
+          <option value="">Выберите тип</option>
+          {% for type, label in question_form.fields.question_type.choices %}
+            <option value="{{ type }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="choices-container-${questionCount}">
+        <div class="mb-3 choice-group">
+          <input type="text" name="choice_${questionCount}_0-text" class="form-control" placeholder="Вариант ответа" required>
+          <input type="checkbox" name="choice_${questionCount}_0-is_correct" id="id_choice_${questionCount}_0-is_correct" class="form-check-input ms-2">
+          <label class="form-check-label ms-1" for="id_choice_${questionCount}_0-is_correct">Правильный?</label>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary add-choice" data-question-id="${questionCount}">Добавить вариант</button>
+      <button type="button" class="btn btn-danger remove-question">Удалить вопрос</button>
+    </div>
+  `;
+  questionContainer.insertAdjacentHTML('beforeend', newQuestionHTML);
+
+  const addChoiceButton = questionContainer.querySelector(`.add-choice[data-question-id="${questionCount}"]`);
+  addChoiceButton.addEventListener('click', addChoice.bind(null, questionCount));
+
+  const removeQuestionButton = questionContainer.querySelector(`.remove-question`);
+  removeQuestionButton.addEventListener('click', removeQuestion.bind(null, questionCount));
+}
+
+
+function addChoice(questionId) {
+  const choicesContainer = document.getElementById(`choices-container-${questionId}`);
+  const choiceCount = choicesContainer.querySelectorAll('.choice-group').length;
+  const newChoiceHTML = `
+    <div class="mb-3 choice-group">
+      <input type="text" name="choice_${questionId}_${choiceCount}-text" class="form-control" placeholder="Вариант ответа" required>
+      <input type="checkbox" name="choice_${questionId}_${choiceCount}-is_correct" id="id_choice_${questionId}_${choiceCount}-is_correct" class="form-check-input ms-2">
+      <label class="form-check-label ms-1" for="id_choice_${questionId}_${choiceCount}-is_correct">Правильный?</label>
+    </div>
+  `;
+  choicesContainer.insertAdjacentHTML('beforeend', newChoiceHTML);
+}
+
+function removeQuestion(questionId){
+    const questionBlock = document.querySelector(`.question-block:nth-child(${questionId + 1})`);
+    questionBlock.remove();
+    questionCount--;
+    //Необходимо перестроить индексы вопросов после удаления!
+    updateQuestionNumbers();
+}
+
+
+// Initial question
+addQuestion();
+
+// Add event listener for adding new questions
+const addQuestionButton = document.createElement('button');
+addQuestionButton.type = 'button';
+addQuestionButton.className = 'btn btn-primary mt-3';
+addQuestionButton.textContent = 'Добавить вопрос';
+addQuestionButton.addEventListener('click', addQuestion);
+questionContainer.parentNode.insertBefore(addQuestionButton, questionContainer.nextSibling);
+
+
+function updateQuestionNumbers() {
+    const questionBlocks = document.querySelectorAll('.question-block');
+    questionBlocks.forEach((block, index) => {
+        const inputs = block.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.name = input.name.replace(/question_\d+/, `question_${index}`);
+            if (input.name.startsWith('choice_')) {
+                input.name = input.name.replace(/choice_\d+_\d+/, `choice_${index}_${input.name.split('_')[2]}`);
+                input.id = input.id.replace(/choice_\d+_\d+/, `choice_${index}_${input.id.split('_')[2]}`); //Обновляем id для соответствия name
+            }
+        });
+    });
+}
+</script>
+{% endblock %}
