@@ -5,9 +5,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.http import HttpResponseBadRequest
 from django.utils import timezone
 from django.db.models import Exists, OuterRef
 
@@ -147,7 +145,7 @@ def create_questions(request, quiz_id):
                 return HttpResponseBadRequest(question_form.errors)
 
         # Перенаправление на страницу с квизом
-        return redirect('home')
+        return redirect('quiz_detail', pk=quiz_id)
 
     else:
         return render(request, 'quiz/create_questions.html', {'quiz': quiz, 'question_form': QuestionForm()})
