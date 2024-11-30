@@ -26,6 +26,11 @@
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav ml-auto">
         {% if user.is_authenticated %}
+          {% if user.profile.is_author %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'quiz_create' %}">Создать тест</a>
+            </li>
+          {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'profile' %}">Профиль</a>
           </li>

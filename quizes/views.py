@@ -103,48 +103,56 @@ def create_quiz(request):
     return render(request, 'quiz/create_quiz.html', {'form': form})
 
 
+@login_required
 def create_questions(request, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
     if request.method == 'POST':
-        # получаем количество вопросов из скрытого поля формы
         num_questions = int(request.POST.get('num_questions', 0))
 
         for i in range(num_questions):
+            question_text = request.POST.get(f'question_{i}-text')
+            question_type = request.POST.get(f'question_{i}-question_type')
+            correct_answer = request.POST.get(f'question_{i}-correct_answer', '')
+
+            if not question_text or not question_type:
+                return HttpResponseBadRequest("Не все поля вопроса заполнены!")
+
             question_data = {
-                'text': request.POST.get(f'question_{i}-text'),
-                'question_type': request.POST.get(f'question_{i}-question_type'),
-                'quiz': quiz,
-                'order': i+1  # Устанавливаем порядок вопроса
+                'quiz': quiz.id,
+                'text': question_text,
+                'question_type': question_type,
+                'order': i + 1,
+                'correct_answer': correct_answer
             }
-            if not all(question_data.values()):  # проверка на неполные вопросы
-                return HttpResponseBadRequest("Не все поля заполнены!")
 
             question_form = QuestionForm(question_data)
             if question_form.is_valid():
                 question = question_form.save()
 
-                num_choices = int(request.POST.get(f'num_choices_{i}', 0))
-                for j in range(num_choices):
-                    choice_data = {
-                        'question': question,
-                        'text': request.POST.get(f'choice_{i}_{j}-text'),
-                        'is_correct': request.POST.get(f'choice_{i}_{j}-is_correct') == 'on',
-                    }
-                    # проверяем наличие текста варианта ответа
-                    if not choice_data['text']:
-                        continue
+                if question_type in ['single', 'multiple']:
+                    num_choices = int(request.POST.get(f'num_choices_{i}', 0))
+                    for j in range(num_choices):
+                        choice_text = request.POST.get(f'choice_{i}_{j}-text')
+                        is_correct = request.POST.get(f'choice_{i}_{j}-is_correct') == 'on'
 
-                    choice_form = ChoiceForm(choice_data)
-                    if choice_form.is_valid():
-                        choice_form.save()
-                    else:
-                        # Обработка ошибки при невалидности данных о варианте ответа
-                        return HttpResponseBadRequest(choice_form.errors)
+                        if not choice_text:
+                            continue
+
+                        choice_data = {
+                            'question': question.id,
+                            'text': choice_text,
+                            'is_correct': is_correct
+                        }
+
+                        choice_form = ChoiceForm(choice_data)
+                        if choice_form.is_valid():
+                            choice_form.save()
+                        else:
+                            return HttpResponseBadRequest(f"Ошибка в варианте ответа: {choice_form.errors}")
             else:
-                # Обработка ошибок при невалидности данных о вопросе
-                return HttpResponseBadRequest(question_form.errors)
+                return HttpResponseBadRequest(f"Ошибка в вопросе: {question_form.errors}")
 
-        # Перенаправление на страницу с квизом
+        # Перенаправление на страницу с тестом
         return redirect('quiz_detail', pk=quiz_id)
 
     else:

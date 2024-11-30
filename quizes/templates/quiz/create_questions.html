@@ -1,3 +1,4 @@
+<!-- templates/quiz/create_questions.html -->
 {% extends 'quiz/base.html' %}
 
 {% block content %}
@@ -8,98 +9,181 @@
     <input type="hidden" name="num_questions" id="num_questions" value="0">
     <div id="question-container"></div>
     <button type="submit" class="btn btn-success mt-3">Сохранить вопросы</button>
-</form>
+  </form>
 </div>
 
-
 <script>
- const questionContainer = document.getElementById('question-container');
-let questionCount = 0;
+  const questionContainer = document.getElementById('question-container');
+  let questionCount = 0;
 
-function addQuestion() {
-  questionCount++;
-  const newQuestionHTML = `
-    <div class="question-block mb-4">
-      <div class="mb-3">
-        <label for="id_text_${questionCount}" class="form-label">Текст вопроса:</label>
-        <textarea id="id_text_${questionCount}" name="question_${questionCount}-text" class="form-control" rows="3" required></textarea>
-      </div>
-      <div class="mb-3">
-        <label for="id_question_type_${questionCount}" class="form-label">Тип вопроса:</label>
-        <select id="id_question_type_${questionCount}" name="question_${questionCount}-question_type" class="form-select" required>
-          <option value="">Выберите тип</option>
-          {% for type, label in question_form.fields.question_type.choices %}
-            <option value="{{ type }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div id="choices-container-${questionCount}">
-        <div class="mb-3 choice-group">
-          <input type="text" name="choice_${questionCount}_0-text" class="form-control" placeholder="Вариант ответа" required>
-          <input type="checkbox" name="choice_${questionCount}_0-is_correct" id="id_choice_${questionCount}_0-is_correct" class="form-check-input ms-2">
-          <label class="form-check-label ms-1" for="id_choice_${questionCount}_0-is_correct">Правильный?</label>
+  function addQuestion() {
+    const questionIndex = questionCount;
+    questionCount++;
+    document.getElementById('num_questions').value = questionCount;
+
+    const newQuestionHTML = `
+      <div class="question-block mb-4" data-question-index="${questionIndex}">
+        <div class="mb-3">
+          <label for="id_text_${questionIndex}" class="form-label">Текст вопроса:</label>
+          <textarea id="id_text_${questionIndex}" name="question_${questionIndex}-text" class="form-control" rows="3" required></textarea>
         </div>
+        <div class="mb-3">
+          <label for="id_question_type_${questionIndex}" class="form-label">Тип вопроса:</label>
+          <select id="id_question_type_${questionIndex}" name="question_${questionIndex}-question_type" class="form-select question-type-select" required>
+            <option value="">Выберите тип</option>
+            {% for type, label in question_form.fields.question_type.choices %}
+              <option value="{{ type }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3 correct-answer-block" style="display: none;">
+          <label for="id_correct_answer_${questionIndex}" class="form-label">Правильный ответ:</label>
+          <textarea id="id_correct_answer_${questionIndex}" name="question_${questionIndex}-correct_answer" class="form-control" rows="2"></textarea>
+        </div>
+        <input type="hidden" name="num_choices_${questionIndex}" id="num_choices_${questionIndex}" value="1">
+        <div id="choices-container-${questionIndex}">
+          <div class="mb-3 choice-group">
+            <input type="text" name="choice_${questionIndex}_0-text" class="form-control" placeholder="Вариант ответа" required>
+            <input type="checkbox" name="choice_${questionIndex}_0-is_correct" id="id_choice_${questionIndex}_0-is_correct" class="form-check-input ms-2">
+            <label class="form-check-label ms-1" for="id_choice_${questionIndex}_0-is_correct">Правильный?</label>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary add-choice" data-question-id="${questionIndex}">Добавить вариант</button>
+        <button type="button" class="btn btn-danger remove-question">Удалить вопрос</button>
       </div>
-      <button type="button" class="btn btn-primary add-choice" data-question-id="${questionCount}">Добавить вариант</button>
-      <button type="button" class="btn btn-danger remove-question">Удалить вопрос</button>
-    </div>
-  `;
-  questionContainer.insertAdjacentHTML('beforeend', newQuestionHTML);
+    `;
+    questionContainer.insertAdjacentHTML('beforeend', newQuestionHTML);
 
-  const addChoiceButton = questionContainer.querySelector(`.add-choice[data-question-id="${questionCount}"]`);
-  addChoiceButton.addEventListener('click', addChoice.bind(null, questionCount));
+    const addChoiceButton = questionContainer.querySelector(`.add-choice[data-question-id="${questionIndex}"]`);
+    addChoiceButton.addEventListener('click', function() {
+      addChoice(questionIndex);
+    });
 
-  const removeQuestionButton = questionContainer.querySelector(`.remove-question`);
-  removeQuestionButton.addEventListener('click', removeQuestion.bind(null, questionCount));
-}
+    const removeQuestionButton = questionContainer.querySelector(`.question-block[data-question-index="${questionIndex}"] .remove-question`);
+    removeQuestionButton.addEventListener('click', function() {
+      removeQuestion(questionIndex);
+    });
 
+    // Добавляем обработчик изменения типа вопроса
+    const questionTypeSelect = document.getElementById(`id_question_type_${questionIndex}`);
+    questionTypeSelect.addEventListener('change', function() {
+      toggleCorrectAnswerField(questionIndex);
+    });
+  }
 
-function addChoice(questionId) {
-  const choicesContainer = document.getElementById(`choices-container-${questionId}`);
-  const choiceCount = choicesContainer.querySelectorAll('.choice-group').length;
-  const newChoiceHTML = `
-    <div class="mb-3 choice-group">
-      <input type="text" name="choice_${questionId}_${choiceCount}-text" class="form-control" placeholder="Вариант ответа" required>
-      <input type="checkbox" name="choice_${questionId}_${choiceCount}-is_correct" id="id_choice_${questionId}_${choiceCount}-is_correct" class="form-check-input ms-2">
-      <label class="form-check-label ms-1" for="id_choice_${questionId}_${choiceCount}-is_correct">Правильный?</label>
-    </div>
-  `;
-  choicesContainer.insertAdjacentHTML('beforeend', newChoiceHTML);
-}
+  function toggleCorrectAnswerField(questionIndex) {
+    const questionType = document.getElementById(`id_question_type_${questionIndex}`).value;
+    const correctAnswerBlock = document.querySelector(`.question-block[data-question-index="${questionIndex}"] .correct-answer-block`);
+    const choicesContainer = document.getElementById(`choices-container-${questionIndex}`);
+    const addChoiceButton = document.querySelector(`.question-block[data-question-index="${questionIndex}"] .add-choice`);
 
-function removeQuestion(questionId){
-    const questionBlock = document.querySelector(`.question-block:nth-child(${questionId + 1})`);
+    if (questionType === 'text') {
+      correctAnswerBlock.style.display = 'block';
+      choicesContainer.style.display = 'none';
+      addChoiceButton.style.display = 'none';
+    } else {
+      correctAnswerBlock.style.display = 'none';
+      choicesContainer.style.display = 'block';
+      addChoiceButton.style.display = 'inline-block';
+    }
+  }
+
+  function addChoice(questionId) {
+    const choicesContainer = document.getElementById(`choices-container-${questionId}`);
+    const numChoicesInput = document.getElementById(`num_choices_${questionId}`);
+    let choiceCount = choicesContainer.querySelectorAll('.choice-group').length;
+
+    const newChoiceHTML = `
+      <div class="mb-3 choice-group">
+        <input type="text" name="choice_${questionId}_${choiceCount}-text" class="form-control" placeholder="Вариант ответа" required>
+        <input type="checkbox" name="choice_${questionId}_${choiceCount}-is_correct" id="id_choice_${questionId}_${choiceCount}-is_correct" class="form-check-input ms-2">
+        <label class="form-check-label ms-1" for="id_choice_${questionId}_${choiceCount}-is_correct">Правильный?</label>
+      </div>
+    `;
+    choicesContainer.insertAdjacentHTML('beforeend', newChoiceHTML);
+
+    // Увеличиваем значение num_choices_{questionId}
+    numChoicesInput.value = choiceCount + 1;
+  }
+
+  function removeQuestion(questionId) {
+    const questionBlock = document.querySelector(`.question-block[data-question-index="${questionId}"]`);
     questionBlock.remove();
     questionCount--;
-    //Необходимо перестроить индексы вопросов после удаления!
+
     updateQuestionNumbers();
-}
+  }
 
-
-// Initial question
-addQuestion();
-
-// Add event listener for adding new questions
-const addQuestionButton = document.createElement('button');
-addQuestionButton.type = 'button';
-addQuestionButton.className = 'btn btn-primary mt-3';
-addQuestionButton.textContent = 'Добавить вопрос';
-addQuestionButton.addEventListener('click', addQuestion);
-questionContainer.parentNode.insertBefore(addQuestionButton, questionContainer.nextSibling);
-
-
-function updateQuestionNumbers() {
+  function updateQuestionNumbers() {
     const questionBlocks = document.querySelectorAll('.question-block');
     questionBlocks.forEach((block, index) => {
-        const inputs = block.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.name = input.name.replace(/question_\d+/, `question_${index}`);
-            if (input.name.startsWith('choice_')) {
-                input.name = input.name.replace(/choice_\d+_\d+/, `choice_${index}_${input.name.split('_')[2]}`);
-                input.id = input.id.replace(/choice_\d+_\d+/, `choice_${index}_${input.id.split('_')[2]}`); //Обновляем id для соответствия name
-            }
-        });
+      block.setAttribute('data-question-index', index);
+
+      // Обновляем имя и ID скрытого поля num_choices_{index}
+      const numChoicesInput = block.querySelector(`[name^="num_choices_"]`);
+      numChoicesInput.name = `num_choices_${index}`;
+      numChoicesInput.id = `num_choices_${index}`;
+
+      // Обновляем имена и ID полей в вопросе
+      const inputs = block.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        // Обновляем имя поля
+        input.name = input.name.replace(/question_\d+/, `question_${index}`);
+        input.name = input.name.replace(/choice_\d+_(\d+)/, `choice_${index}_$1`);
+
+        // Обновляем ID поля
+        if (input.id) {
+          input.id = input.id.replace(/id_text_\d+/, `id_text_${index}`);
+          input.id = input.id.replace(/id_question_type_\d+/, `id_question_type_${index}`);
+          input.id = input.id.replace(/id_correct_answer_\d+/, `id_correct_answer_${index}`);
+          input.id = input.id.replace(/id_choice_\d+_(\d+)-is_correct/, `id_choice_${index}_$1-is_correct`);
+        }
+      });
+
+      // Обновляем атрибуты 'for' у label
+      const labels = block.querySelectorAll('label');
+      labels.forEach(label => {
+        if (label.htmlFor) {
+          label.htmlFor = label.htmlFor.replace(/id_text_\d+/, `id_text_${index}`);
+          label.htmlFor = label.htmlFor.replace(/id_question_type_\d+/, `id_question_type_${index}`);
+          label.htmlFor = label.htmlFor.replace(/id_correct_answer_\d+/, `id_correct_answer_${index}`);
+          label.htmlFor = label.htmlFor.replace(/id_choice_\d+_(\d+)-is_correct/, `id_choice_${index}_$1-is_correct`);
+        }
+      });
+
+      // Обновляем ID контейнера вариантов ответов
+      const choicesContainer = block.querySelector(`[id^="choices-container-"]`);
+      choicesContainer.id = `choices-container-${index}`;
+
+      // Обновляем кнопку добавления вариантов
+      const addChoiceButton = block.querySelector('.add-choice');
+      addChoiceButton.setAttribute('data-question-id', index);
+      addChoiceButton.onclick = function() { addChoice(index); };
+
+      // Обновляем кнопку удаления вопроса
+      const removeQuestionButton = block.querySelector('.remove-question');
+      removeQuestionButton.onclick = function() { removeQuestion(index); };
+
+      // Обновляем обработчик изменения типа вопроса
+      const questionTypeSelect = block.querySelector(`.question-type-select`);
+      questionTypeSelect.id = `id_question_type_${index}`;
+      questionTypeSelect.name = `question_${index}-question_type`;
+      questionTypeSelect.onchange = function() { toggleCorrectAnswerField(index); };
     });
-}
+
+    // Обновляем значение num_questions
+    document.getElementById('num_questions').value = questionBlocks.length;
+  }
+
+  // Initial question
+  addQuestion();
+
+  // Add event listener for adding new questions
+  const addQuestionButton = document.createElement('button');
+  addQuestionButton.type = 'button';
+  addQuestionButton.className = 'btn btn-primary mt-3';
+  addQuestionButton.textContent = 'Добавить вопрос';
+  addQuestionButton.addEventListener('click', addQuestion);
+  questionContainer.parentNode.insertBefore(addQuestionButton, questionContainer.nextSibling);
 </script>
 {% endblock %}
