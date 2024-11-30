@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Quiz, Choice, Attempt, Answer, Profile, Question
-from .forms import QuizForm, UserRegisterForm, ProfileUpdateForm, QuestionForm, ChoiceForm
+from .forms import QuizForm, UserRegisterForm, ProfileUpdateForm, QuestionForm, ChoiceForm, CommentForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -38,7 +38,8 @@ def take_quiz(request, quiz_id):
 
             if question.question_type == 'single':
                 selected_choice_id = answer_data[0] if answer_data else None
-                selected_choice = Choice.objects.get(id=selected_choice_id) if selected_choice_id else None
+                selected_choice = Choice.objects.get(
+                    id=selected_choice_id) if selected_choice_id else None
 
                 answer = Answer.objects.create(
                     attempt=attempt,
@@ -49,7 +50,8 @@ def take_quiz(request, quiz_id):
 
             elif question.question_type == 'multiple':
                 selected_choice_ids = answer_data
-                selected_choices = Choice.objects.filter(id__in=selected_choice_ids)
+                selected_choices = Choice.objects.filter(
+                    id__in=selected_choice_ids)
 
                 answer = Answer.objects.create(
                     attempt=attempt,
@@ -69,7 +71,8 @@ def take_quiz(request, quiz_id):
                 if correct_choices == user_choices:
                     total_score += 1
             elif question.question_type == 'text':
-                correct_answer = question.correct_answer.strip().lower() if question.correct_answer else ''
+                correct_answer = question.correct_answer.strip(
+                ).lower() if question.correct_answer else ''
                 user_answer = answer.text_answer.strip().lower()
                 if user_answer == correct_answer:
                     total_score += 1
@@ -112,7 +115,8 @@ def create_questions(request, quiz_id):
         for i in range(num_questions):
             question_text = request.POST.get(f'question_{i}-text')
             question_type = request.POST.get(f'question_{i}-question_type')
-            correct_answer = request.POST.get(f'question_{i}-correct_answer', '')
+            correct_answer = request.POST.get(
+                f'question_{i}-correct_answer', '')
 
             if not question_text or not question_type:
                 return HttpResponseBadRequest("Не все поля вопроса заполнены!")
@@ -133,7 +137,8 @@ def create_questions(request, quiz_id):
                     num_choices = int(request.POST.get(f'num_choices_{i}', 0))
                     for j in range(num_choices):
                         choice_text = request.POST.get(f'choice_{i}_{j}-text')
-                        is_correct = request.POST.get(f'choice_{i}_{j}-is_correct') == 'on'
+                        is_correct = request.POST.get(
+                            f'choice_{i}_{j}-is_correct') == 'on'
 
                         if not choice_text:
                             continue
@@ -209,7 +214,8 @@ def quiz_result(request, attempt_id):
             is_correct = set(correct_choices) == set(user_choices)
         elif question.question_type == 'text':
             # Логика проверки текстовых ответов (опционально)
-            correct_answer = question.correct_answer.strip().lower() if question.correct_answer else ''
+            correct_answer = question.correct_answer.strip(
+            ).lower() if question.correct_answer else ''
             user_answer = answer.text_answer.strip().lower()
             is_correct = user_answer == correct_answer
 
@@ -229,7 +235,27 @@ def quiz_result(request, attempt_id):
 
 def quiz_detail(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk, is_published=True)
-    return render(request, 'quiz/quiz_detail.html', {'quiz': quiz})
+
+    comments = quiz.comments.all()
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.quiz = quiz
+            comment.user = request.user
+            comment.save()
+            return redirect('quiz_detail', pk=pk)
+    else:
+        form = CommentForm()
+
+    context = {
+        'quiz': quiz,
+        'comments': comments,
+        'form': form,
+    }
+
+    return render(request, 'quiz/quiz_detail.html', context)
 
 
 @login_required
@@ -253,5 +279,6 @@ def quiz_list(request):
 @login_required
 def attempt_list(request, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
-    attempts = Attempt.objects.filter(user=request.user, quiz=quiz).order_by('-finished_at')
+    attempts = Attempt.objects.filter(
+        user=request.user, quiz=quiz).order_by('-finished_at')
     return render(request, 'quiz/attempt_list.html', {'quiz': quiz, 'attempts': attempts})

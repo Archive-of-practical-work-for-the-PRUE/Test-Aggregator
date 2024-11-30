@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Quiz, Question, Choice, Profile
+from .models import Quiz, Question, Choice, Profile, Comment
 
 
 class QuizForm(forms.ModelForm):
@@ -42,3 +42,9 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['bio', 'avatar']
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ('text',)
