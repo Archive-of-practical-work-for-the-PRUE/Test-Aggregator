@@ -1,32 +1,86 @@
 # Test-Aggregator
 
-## Install
+Веб-приложение для создания и прохождения тестов, разработанное на Django. Позволяет создавать, редактировать и проходить тесты различных категорий.
+
+## Описание функциональности
+
+### Для пользователей
+
+- Регистрация и авторизация в системе
+- Просмотр доступных тестов по категориям
+- Прохождение тестов с различными типами вопросов:
+  - Выбор одного правильного ответа
+  - Выбор нескольких правильных ответов
+  - Ввод текстового ответа
+- Просмотр результатов прохождения тестов
+- Комментирование тестов
+- Просмотр истории своих попыток
+- Настройка личного профиля (аватар, биография)
+
+### Для авторов тестов
+
+- Создание новых тестов
+- Добавление вопросов различных типов
+- Управление категориями тестов
+- Публикация/скрытие тестов
+- Просмотр статистики прохождения тестов
+- Управление комментариями
+
+### Административные функции
+
+- Управление пользователями
+- Модерация тестов и комментариев
+- Просмотр общей статистики
+- Управление категориями
+
+## Установка
+
+1. Создайте виртуальное окружение:
 
 ```bash
-# 1) Create virtual environment
 python -m venv env
+```
 
-# 1.5) Activate virtual environment
-# linux
+2. Активируйте виртуальное окружение:
+
+```bash
+# Linux
 source env/bin/activate
 
-# windwos
+# Windows
 ./env/Scripts/activate
+```
 
-# 2) Install packages
+3. Установите зависимости:
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Run project
+## Запуск проекта
 
 ```bash
 python manage.py runserver
 ```
 
-## Диграмма прецедентов
+## Структура проекта
+
+```
+Test-Aggregator/
+├── assets/          # Статические файлы (CSS, JavaScript)
+├── media/           # Медиафайлы (аватары пользователей)
+├── quizagregator/   # Основное приложение Django
+├── quizes/          # Приложение для работы с тестами
+├── manage.py        # Скрипт управления Django
+└── requirements.txt # Зависимости проекта
+```
+
+## Диаграмма прецедентов
+
 ![Диаграмма прецедентов](assets/Диаграмма%20Прецедентов.png)
 
 ## Диаграмма классов ORM
+
 ```mermaid
 classDiagram
     %% Класс User
@@ -38,7 +92,7 @@ classDiagram
         +authenticate()
         +register()
     }
-    
+
     %% Класс Profile
     class Profile {
         +Integer id
@@ -47,7 +101,7 @@ classDiagram
         +Boolean is_author
         +update_profile()
     }
-    
+
     %% Класс Category
     class Category {
         +Integer id
@@ -55,7 +109,7 @@ classDiagram
         +String description
         +get_quizzes()
     }
-    
+
     %% Класс Quiz
     class Quiz {
         +Integer id
@@ -68,7 +122,7 @@ classDiagram
         +unpublish()
         +get_questions()
     }
-    
+
     %% Класс Question
     class Question {
         +Integer id
@@ -77,14 +131,14 @@ classDiagram
         +Integer order
         +get_answers()
     }
-    
+
     %% Класс Choice
     class Choice {
         +Integer id
         +String text
         +Boolean is_correct
     }
-    
+
     %% Класс Attempt
     class Attempt {
         +Integer id
@@ -93,20 +147,20 @@ classDiagram
         +Float score
         +Float max_score
     }
-    
+
     %% Класс Answer
     class Answer {
         +Integer id
         +String text_answer
     }
-    
+
     %% Класс Comment
     class Comment {
         +Integer id
         +String text
         +DateTime created_at
     }
-    
+
     %% Отношения между классами
     User "1" -- "1" Profile : имеет
     User "1" -- "0..*" Attempt : делает
@@ -124,9 +178,9 @@ classDiagram
     Answer "*" -- "0..1" Choice : выбранный вариант
 ```
 
-## Диаграмма последовательностей
+## Диаграммы последовательностей
 
-### Диаграмма последовательности прохождения теста
+### Прохождение теста
 
 ```mermaid
 sequenceDiagram
@@ -161,7 +215,9 @@ sequenceDiagram
     ResultView->>Browser: Отправить страницу результатов
     Browser->>User: Отображает результаты
 ```
-### Диаграмма последовательности регистрации
+
+### Регистрация пользователя
+
 ```mermaid
 sequenceDiagram
     participant User
@@ -199,3 +255,9 @@ sequenceDiagram
     LoginView->>Browser: Перенаправляет на главную страницу
     Browser->>User: Отображает главную страницу (пользователь вошел в систему)
 ```
+
+## Разработчики
+
+- [@Sareff](https://github.com/Sareff) - Илья
+- [@Merrcurys](https://github.com/Merrcurys) - Александр
+
